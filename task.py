@@ -3,11 +3,13 @@ import re
 import random
 import time
 import urllib3
+import logging
 from config import Config
-from queue import Queue
 from bs4 import BeautifulSoup
 
 urllib3.disable_warnings()
+logging.basicConfig(level=logging.WARNING)
+HTTP_ERROR_MSG = 'HTTP error {res.status_code} - {res.reason}'
 
 config = Config()
 line_bot_api = config.line_bot_api
@@ -92,13 +94,14 @@ class PttBeauty(Crawler):
         url = 'https://www.ptt.cc/bbs/Beauty/index{}.html'
         index_seqs = PttBeauty.get_all_index(self.content, url, self.parser_page)
         articles = []
-        while not index_seqs.empty():
-            index = index_seqs.get()
-            res = self.rs.get(index, verify=False)
-            # 如網頁忙線中,則先將網頁加入 index_seqs 並休息1秒後再連接
-            if res.status_code != 200:
-                index_seqs.put(index)
-                time.sleep(1)
+        for page in index_seqs:
+            try:
+                res = self.rs.get(page, verify=False)
+                res.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                logging.warning(HTTP_ERROR_MSG.format(res=exc.response))
+            except requests.exceptions.ConnectionError:
+                logging.error('Connection error')
             else:
                 articles += self.crawler_info(res)
             time.sleep(0.05)
@@ -137,10 +140,10 @@ class PttBeauty(Crawler):
     @staticmethod
     def get_all_index(content, url, parser_page):
         max_page = PttBeauty.get_max_page(content.select('.btn.wide')[1]['href'])
-        queue = Queue()
-        for page in range(max_page - parser_page + 1, max_page + 1, 1):
-            queue.put(url.format(page))
-        return queue
+        return (
+            url.format(page)
+            for page in range(max_page - parser_page + 1, max_page + 1, 1)
+        )
 
     @staticmethod
     def get_max_page(content):
@@ -157,13 +160,15 @@ class PttGossiping(Crawler):
         url = 'https://www.ptt.cc/bbs/Gossiping/index{}.html'
         index_seqs = PttBeauty.get_all_index(self.content, url, self.parser_page)
         articles = []
-        while not index_seqs.empty():
-            index = index_seqs.get()
-            res = self.rs.get(index, verify=False)
-            # 如網頁忙線中,則先將網頁加入 index_seqs 並休息1秒後再連接
-            if res.status_code != 200:
-                index_seqs.put(index)
-                time.sleep(1)
+
+        for page in index_seqs:
+            try:
+                res = self.rs.get(page, verify=False)
+                res.raise_for_status()
+            except requests.exceptions.HTTPError as exc:
+                logging.warning(HTTP_ERROR_MSG.format(res=exc.response))
+            except requests.exceptions.ConnectionError:
+                logging.error('Connection error')
             else:
                 articles += self.crawler_info(res)
             time.sleep(0.05)
@@ -186,7 +191,6 @@ class PttGossiping(Crawler):
                 link = r_ent.find('a')['href']
                 if not link:
                     break
-
                 # 確定得到url再去抓 標題 以及 推文數
                 title = r_ent.find(class_="title").text.strip()
                 url = 'https://www.ptt.cc' + link
