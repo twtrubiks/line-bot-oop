@@ -144,7 +144,7 @@ class PttGossiping(Crawler):
 可參考 [python-patterns-strategy.py](https://github.com/faif/python-patterns/blob/master/behavioral/strategy.py)
 
 ```python
-import type
+import types
 class StrategyExample:
     def __init__(self, func=None):
         self.name = 'Strategy Example 0'
