@@ -42,12 +42,12 @@ def eyny_movie(self):
 
 
 def apple_news(self):
-    task = AppleNews('https://tw.appledaily.com/new/realtime')
+    task = AppleNews('https://tw.appledaily.com/realtime/new/')
     self.reply_message(TextSendMessage(text=task.parser()))
 
 
 def ptt_beauty(self):
-    task = PttBeauty('https://www.ptt.cc/bbs/Beauty/index.html')
+    task = PttBeauty('https://www.ptt.cc/bbs/Beauty/index.html', 'post', 'Beauty')
     self.reply_message(TextSendMessage(text=task.parser()))
 
 

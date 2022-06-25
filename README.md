@@ -330,7 +330,7 @@ line 的 QRCODE
 
 ## 執行環境
 
-* Python 3.6.6
+* Python 3.9
 
 ## Donation
 

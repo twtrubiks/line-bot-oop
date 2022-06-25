@@ -22,18 +22,23 @@ API_Get_Image = config.API_Get_Image
 class Crawler:
     rs = requests.session()
 
-    def __init__(self, target_url, method='get'):
+    def __init__(self, target_url, method='get', target=None):
         print('Start Crawler....{}'.format(self.__class__.__name__))
         self.url = target_url
-        self.content = self.analyze(method)
+        self.content = self.analyze(method, target)
 
-    def analyze(self, method):
+    def analyze(self, method, target):
         if method == 'get':
             res = self.rs.get(self.url, verify=False)
         else:
             # post
+            if target == 'Beauty':
+                url = '/bbs/Beauty/index.html'
+            else:
+                url = '/bbs/Gossiping/index.html'
+
             load = {
-                'from': '/bbs/Gossiping/index.html',
+                'from': url,
                 'yes': 'yes'
             }
             res = self.rs.post('https://www.ptt.cc/ask/over18', verify=False, data=load)
@@ -72,10 +77,13 @@ class EynyMovie(Crawler):
 class AppleNews(Crawler):
     def parser(self):
         result = ''
-        for index, data in enumerate(self.content.select('.rtddt a')):
+        base = 'https://tw.appledaily.com'
+        for index, data in enumerate(self.content.select('.flex-feature a')):
             if index == 5:
                 break
-            result += '{}\n\n'.format(data['href'])
+            title = data.find('img')['alt']
+            url = data['href']
+            result += '{}{} {}\n\n'.format(base, url, title)
         return result
 
 

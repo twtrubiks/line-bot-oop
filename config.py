@@ -19,7 +19,7 @@ class Config(metaclass=Singleton):
         self.check_file(file)
         self.client_id = self.config['imgur_api']['Client_ID']
         self.client_secret = self.config['imgur_api']['Client_Secret']
-        self.album_id = self.config['imgur_api']['album_id']
+        self.album_id = self.config['imgur_api']['Album_ID']
         self.API_Get_Image = self.config['other_api']['API_Get_Image']
         self.Channel_Secret = self.config['line_bot']['Channel_Secret']
         self.Channel_Access_Token = self.config['line_bot']['Channel_Access_Token']
